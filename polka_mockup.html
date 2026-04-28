@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Полка — Т-Банк Супермаркеты</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif; }
+  body {
+    background: #1c1c1e;
+    color: #000;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .stage { display: flex; gap: 32px; align-items: center; }
+
+  .phone {
+    width: 393px;
+    height: 852px;
+    border-radius: 56px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 50px 120px rgba(0,0,0,0.5);
+    position: relative;
+    isolation: isolate;
+  }
+  .notch { position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 35px; background: #000; border-radius: 20px; z-index: 100; }
+
+  .screens { width: 100%; height: 100%; position: relative; }
+  .screen { position: absolute; inset: 0; background: #f5f5f7;
+    display: none; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; animation: fadeSlide 0.3s ease; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+
+  .status-bar { height: 54px; padding: 0 32px; display: flex; align-items: flex-end;
+    justify-content: space-between; padding-bottom: 6px; font-size: 17px; font-weight: 600;
+    background: transparent; flex-shrink: 0; z-index: 50; }
+  .status-time { color: #000; }
+  .status-icons { color: #000; font-size: 14px; display: flex; gap: 4px; align-items: center; }
+
+  .scrollable { flex: 1; overflow-y: auto; padding-bottom: 100px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .scrollable::-webkit-scrollbar { display: none; }
+
+  .header { padding: 8px 16px 12px; flex-shrink: 0; background: #f5f5f7; }
+  .header.white { background: #fff; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; min-height: 36px; }
+  .h-back { color: #007AFF; font-size: 17px; font-weight: 400; padding: 4px 0; cursor:pointer; }
+  .h-back:hover { opacity: 0.6; }
+  .h-center { text-align: center; flex: 1; }
+  .h-loc { font-size: 12px; color: #8e8e93; line-height: 1.1; }
+  .h-addr { font-size: 14px; font-weight: 600; color: #000; line-height: 1.2; margin-top: 1px; }
+  .h-icon { font-size: 22px; cursor: pointer; padding: 2px 4px; }
+
+  .tabbar { position: absolute; bottom: 0; left: 0; right: 0; height: 88px;
+    background: rgba(255,255,255,0.96); border-top: 0.5px solid #d1d1d6;
+    display: flex; justify-content: space-around; padding-top: 8px; backdrop-filter: blur(20px);
+    z-index: 40; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; font-size: 10px; color: #8e8e93; cursor: pointer; padding: 4px; }
+  .tab.active { color: #007AFF; }
+  .tab-ico { font-size: 22px; }
+
+  .top-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; padding: 0 16px; margin-top: 8px; }
+  .travel-card { background: linear-gradient(180deg, #d6f1ff 0%, #b8e0f5 100%);
+    border-radius: 22px; padding: 16px; height: 195px; position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.15s; }
+  .travel-card:active { transform: scale(0.98); }
+  .travel-card .label-cb { background: rgba(0,0,0,0.65); color: #fff; border-radius: 100px;
+    padding: 4px 10px; font-size: 11px; font-weight: 600; display: inline-flex;
+    align-items: center; gap: 4px; margin-top: 50px; }
+  .travel-card .title { font-weight: 600; font-size: 17px; color: #000; }
+  .travel-card .img { position: absolute; right: -20px; bottom: -30px; font-size: 130px; opacity: 0.95; }
+
+  .right-col { display: flex; flex-direction: column; gap: 10px; }
+  .small-card { background: #eef2ff; border-radius: 22px; padding: 14px;
+    height: 92px; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+  .small-card:active { transform: scale(0.97); }
+  .small-card.green-grocery { background: #e8f5e9; }
+  .small-card .title { font-weight: 600; font-size: 15px; color: #000; }
+  .small-card .label-cb { background: rgba(0,0,0,0.65); color: #fff; border-radius: 100px;
+    padding: 3px 8px; font-size: 10px; font-weight: 600; display: inline-block; margin-top: 6px; }
+  .small-card .emoji { position: absolute; right: -2px; bottom: -10px; font-size: 60px; opacity: 0.9; }
+
+  .polka-hero {
+    background: linear-gradient(135deg, #FFDD2D 0%, #FFE65A 100%);
+    border-radius: 22px; padding: 18px; margin: 12px 16px; position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .polka-hero:active { transform: scale(0.99); }
+  .polka-hero::after { content: ''; position: absolute; right: -40px; top: -40px;
+    width: 120px; height: 120px; background: rgba(255,255,255,0.3); border-radius: 50%; }
+  .polka-hero .label { display: inline-block; background: #000; color: #FFDD2D;
+    font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+    letter-spacing: 0.6px; margin-bottom: 10px; position: relative; z-index: 2;}
+  .polka-hero .title { font-weight: 700; font-size: 22px; line-height: 1.1; color: #000;
+    position: relative; z-index: 2; }
+  .polka-hero .subtitle { font-size: 13px; color: rgba(0,0,0,0.7); margin-top: 4px;
+    position: relative; z-index: 2; }
+  .polka-preview { display: flex; gap: 6px; margin-top: 14px; overflow-x: auto;
+    scrollbar-width: none; padding-bottom: 4px; position: relative; z-index: 2; }
+  .polka-preview::-webkit-scrollbar { display: none; }
+  .polka-mini { flex-shrink: 0; width: 60px; cursor: pointer; }
+  .polka-mini .pic { width: 60px; height: 60px; background: #fff; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .polka-mini .price { font-size: 10px; font-weight: 600; color: #000;
+    text-align: center; margin-top: 4px; }
+  .polka-cta { background: #000; color: #fff; border-radius: 14px;
+    padding: 12px; text-align: center; font-weight: 600; font-size: 15px;
+    margin-top: 14px; display: flex; justify-content: space-between; align-items: center;
+    position: relative; z-index: 2; cursor: pointer; transition: opacity 0.15s; }
+  .polka-cta:active { opacity: 0.7; }
+
+  .categories-grid { display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; padding: 4px 16px 12px; }
+  .cat-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;}
+  .cat-item:active { opacity: 0.6; }
+  .cat-icon { width: 56px; height: 56px; border-radius: 18px; display: flex;
+    align-items: center; justify-content: center; font-size: 26px; }
+  .cat-name { font-size: 11px; color: #000; }
+
+  .featured-row { padding: 0 16px; }
+  .featured-card { background: #fff; border-radius: 18px; padding: 14px; margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: center; cursor: pointer; }
+  .featured-card .pic { width: 64px; height: 64px; border-radius: 12px; background: #fce4ec;
+    display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .featured-card .info { flex: 1; }
+  .featured-card .ttl { font-weight: 600; font-size: 14px; }
+  .featured-card .price { font-size: 13px; color: #999; margin-top: 2px; }
+  .featured-card .price strong { color: #000; font-size: 15px; }
+  .featured-card .close { color: #ccc; font-size: 22px; }
+
+  .search-row { display: flex; gap: 12px; padding: 0 16px; margin-bottom: 12px;}
+  .search-pill { flex: 1; background: #e8e8ed; border-radius: 14px; padding: 12px 16px;
+    color: #8e8e93; font-size: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .orders-pill { background: #007AFF; color: #fff; border-radius: 14px; padding: 12px 18px;
+    font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .onb-screen { background: linear-gradient(180deg, #FFDD2D 0%, #FFE65A 100%);
+    display: flex; flex-direction: column; padding: 60px 24px 24px; height: 100%;}
+
+  .onb-step1 .icon-big { font-size: 90px; text-align: center; margin: 60px 0 30px; }
+  .onb-step1 h1 { font-size: 32px; font-weight: 800; color: #000; line-height: 1.05;
+    text-align: center; margin: 0 0 12px; }
+  .onb-step1 p { font-size: 16px; color: rgba(0,0,0,0.7); text-align: center;
+    line-height: 1.4; margin: 0 0 40px; }
+  .onb-features { background: rgba(0,0,0,0.08); border-radius: 18px; padding: 18px;
+    margin-bottom: 16px; }
+  .onb-feat { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; }
+  .onb-feat:last-child { margin-bottom: 0; }
+  .onb-feat .num { width: 28px; height: 28px; background: #000; color: #FFDD2D;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .onb-feat .txt { font-size: 14px; color: #000; }
+  .onb-cta { background: #000; color: #fff; padding: 18px; border-radius: 16px;
+    text-align: center; font-weight: 700; font-size: 16px; margin-top: auto; cursor: pointer;
+    transition: opacity 0.15s; }
+  .onb-cta:active { opacity: 0.8; }
+  .onb-skip { text-align: center; color: rgba(0,0,0,0.6); font-size: 14px; padding: 14px 0; cursor: pointer;}
+
+  .swipe-stage { position: relative; flex: 1; padding: 20px; display: flex; flex-direction: column;}
+  .swipe-stage h2 { font-size: 24px; font-weight: 700; color: #000;
+    text-align: center; margin: 0 0 8px; }
+  .swipe-stage .progress-pill { display: flex; gap: 4px; justify-content: center; margin-bottom: 18px; }
+  .pp-dot { width: 24px; height: 4px; background: rgba(0,0,0,0.2); border-radius: 2px; transition: background 0.3s;}
+  .pp-dot.done { background: #000; }
+  .pp-dot.active { background: #000; }
+
+  .swipe-deck { position: relative; flex: 1; max-height: 470px; }
+  .swipe-card { position: absolute; inset: 0; background: #fff; border-radius: 24px;
+    overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.18); display: flex; flex-direction: column;
+    transition: transform 0.3s ease, opacity 0.3s ease;}
+  .swipe-card.gone-left { transform: translateX(-150%) rotate(-15deg); opacity: 0; }
+  .swipe-card.gone-right { transform: translateX(150%) rotate(15deg); opacity: 0; }
+  .sc-img { flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 140px; background: linear-gradient(180deg, #fff 0%, #f5f5f7 100%); }
+  .sc-info { padding: 18px 22px 22px; background: #fff; }
+  .sc-cat { font-size: 11px; color: #007AFF; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px; }
+  .sc-name { font-size: 22px; font-weight: 700; color: #000; margin: 4px 0 6px; line-height: 1.1;}
+  .sc-meta { font-size: 13px; color: #8e8e93; }
+
+  .swipe-actions { display: flex; justify-content: center; gap: 32px; margin-top: 24px; padding-bottom: 8px; }
+  .swipe-btn { width: 64px; height: 64px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 30px; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); transition: transform 0.15s; }
+  .swipe-btn:active { transform: scale(0.92); }
+  .swipe-btn.no { background: #fff; color: #FF3B30; }
+  .swipe-btn.yes { background: #fff; color: #34C759; }
+
+  .onb-done .check-circle { width: 90px; height: 90px; background: #000;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 50px; color: #FFDD2D; margin: 60px auto 20px; }
+  .onb-done h1 { font-size: 28px; font-weight: 800; color: #000; text-align: center; margin: 0 0 8px;}
+  .onb-done p { font-size: 15px; color: rgba(0,0,0,0.7); text-align: center; margin: 0 0 24px;}
+  .onb-done .scoreline { background: rgba(0,0,0,0.08); border-radius: 14px;
+    padding: 14px; display: flex; justify-content: space-around; margin-bottom: 16px;}
+  .ss-num { font-size: 24px; font-weight: 800; color: #000;}
+  .ss-lbl { font-size: 11px; color: rgba(0,0,0,0.6); text-transform: uppercase;}
+
+  .polka-greeting { padding: 4px 0 6px; }
+  .polka-hello { font-size: 24px; font-weight: 700; color: #000; }
+  .polka-sub { font-size: 13px; color: #8e8e93; margin-top: 2px; }
+
+  .mode-pills { display: flex; gap: 8px; padding: 0 16px; overflow-x: auto;
+    scrollbar-width: none; margin-bottom: 4px; padding-bottom: 4px; }
+  .mode-pills::-webkit-scrollbar { display: none; }
+  .mode-pill { flex-shrink: 0; padding: 9px 14px; background: #fff;
+    border-radius: 100px; font-size: 13px; font-weight: 500; color: #000;
+    border: 1px solid #e5e5ea; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; }
+  .mode-pill.active { background: #000; color: #fff; border-color: #000; }
+  .mode-pill .ico { font-size: 14px; }
+
+  .budget-bar { background: linear-gradient(135deg, #FFDD2D 0%, #FFE65A 100%);
+    border-radius: 18px; padding: 14px 16px; margin: 10px 16px 0;
+    display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    transition: transform 0.15s; }
+  .budget-bar:active { transform: scale(0.98); }
+  .budget-label { font-size: 11px; color: rgba(0,0,0,0.6); font-weight: 700; letter-spacing: 0.4px; }
+  .budget-value { font-size: 16px; font-weight: 700; color: #000; margin-top: 2px; }
+  .budget-progress { width: 86px; }
+  .budget-pct { font-size: 14px; font-weight: 800; text-align: right; margin-bottom: 4px; color: #000;}
+  .bp-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.18); border-radius: 3px; }
+  .bp-fill { height: 6px; background: #000; border-radius: 3px; width: 79%; }
+
+  .hint-card { margin: 12px 16px 0; background: #fff; border-radius: 16px; padding: 14px;
+    border-left: 4px solid #FFDD2D; display: flex; gap: 12px; align-items: center; cursor: pointer;
+    transition: transform 0.15s;}
+  .hint-card:active { transform: scale(0.98); }
+  .hint-card .ico { font-size: 24px;}
+  .hint-card .info { flex: 1;}
+  .hint-card .h-title { font-size: 11px; font-weight: 700; color: #8e8e93;
+    text-transform: uppercase; letter-spacing: 0.5px;}
+  .hint-card .h-text { font-size: 14px; margin-top: 4px; color: #000; line-height: 1.3;}
+  .hint-card .arrow { color: #007AFF; font-size: 20px;}
+
+  .tinder-cta-card { margin: 12px 16px 0;
+    background: linear-gradient(135deg, #ff6b9d 0%, #fc2c79 100%);
+    border-radius: 18px; padding: 16px;
+    display: flex; gap: 14px; align-items: center; color: #fff; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(252, 44, 121, 0.25);
+    transition: transform 0.15s; position: relative; overflow: hidden;}
+  .tinder-cta-card:active { transform: scale(0.98); }
+  .tinder-cta-card::before { content: ''; position: absolute; right: -20px; top: -20px;
+    width: 100px; height: 100px; background: rgba(255,255,255,0.15); border-radius: 50%;}
+  .tinder-cta-card .icon { font-size: 36px; position: relative;}
+  .tinder-cta-card .body { flex: 1; position: relative;}
+  .tinder-cta-card .title { font-size: 15px; font-weight: 700; }
+  .tinder-cta-card .sub { font-size: 12px; opacity: 0.9; margin-top: 2px;}
+  .tinder-cta-card .arr { font-size: 22px; position: relative;}
+
+  .section-h { padding: 0 16px; display: flex; justify-content: space-between;
+    align-items: center; margin: 20px 0 12px; }
+  .section-h h2 { font-size: 22px; font-weight: 700; margin: 0; color: #000;}
+  .section-h .all { font-size: 15px; color: #007AFF; font-weight: 500; cursor: pointer;}
+
+  .polka-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 16px;}
+  .product { background: #fff; border-radius: 16px; padding: 10px; position: relative;
+    cursor: pointer; transition: transform 0.15s;}
+  .product:active { transform: scale(0.98); }
+  .product .pic { width: 100%; aspect-ratio: 1; background: #f5f5f7; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 8px;
+    position: relative; overflow: hidden;}
+  .product .source-tag { position: absolute; top: 8px; left: 8px;
+    background: rgba(0,0,0,0.65); color: #fff; font-size: 9px; font-weight: 600;
+    padding: 3px 7px; border-radius: 6px;}
+  .product .like-tag { position: absolute; top: 8px; right: 8px;
+    background: #fff; border-radius: 50%; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+  .product .price-row { display: flex; align-items: baseline; gap: 6px;}
+  .product .price { font-size: 16px; font-weight: 700; color: #000;}
+  .product .old-price { font-size: 12px; color: #c8c7cc; text-decoration: line-through;}
+  .product .name { font-size: 12px; color: #000; line-height: 1.2; margin-top: 4px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 30px;}
+  .product .freq-tag { background: #f0fff4; color: #2e7d32; font-size: 10px;
+    font-weight: 600; padding: 3px 6px; border-radius: 6px; display: inline-block; margin-top: 4px;}
+  .product .freq-tag.discover { background: #fff3e0; color: #e65100;}
+  .product .freq-tag.alert { background: #ffebee; color: #c62828;}
+  .product .add-btn { position: absolute; bottom: 12px; right: 12px;
+    width: 30px; height: 30px; border-radius: 50%; background: #007AFF;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600; cursor: pointer; transition: transform 0.15s;}
+  .product .add-btn:active { transform: scale(0.9); }
+  .product .add-btn.added { background: #34C759; }
+
+  .cart-bar { position: absolute; bottom: 100px; left: 12px; right: 12px;
+    background: #007AFF; border-radius: 16px; padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center; color: #fff;
+    box-shadow: 0 8px 24px rgba(0,122,255,0.3); cursor: pointer;
+    z-index: 30; transition: opacity 0.3s; opacity: 0; transform: translateY(20px); pointer-events: none;}
+  .cart-bar.visible { opacity: 1; transform: translateY(0); pointer-events: all;}
+  .cart-bar:active { opacity: 0.85; }
+  .cart-bar .left { display: flex; gap: 10px; align-items: center;}
+  .cart-bar .ico { width: 32px; height: 32px; background: rgba(255,255,255,0.2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;}
+  .cart-bar .info-text { font-size: 13px;}
+  .cart-bar .info-text strong { font-size: 15px; font-weight: 700;}
+  .cart-bar .next { font-weight: 600; font-size: 18px;}
+
+  .tinder-quick { background: #1a1a2e; color: #fff;}
+  .tinder-quick .header { background: #1a1a2e; }
+  .tinder-quick .h-back { color: #fff;}
+  .tinder-quick .h-loc { color: rgba(255,255,255,0.6);}
+  .tinder-quick .h-addr { color: #fff;}
+
+  .tq-context { padding: 0 16px 12px;}
+  .tq-context-pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;}
+  .tq-context-pills::-webkit-scrollbar { display: none;}
+  .tq-cp { flex-shrink: 0; padding: 9px 14px; background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 100px; font-size: 13px; font-weight: 500; color: #fff;
+    display: flex; align-items: center; gap: 6px; cursor: pointer;}
+  .tq-cp.active { background: linear-gradient(135deg, #ff6b9d 0%, #fc2c79 100%);
+    border-color: transparent;}
+
+  .tq-prompt { padding: 16px; text-align: center;}
+  .tq-prompt h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px;}
+  .tq-prompt p { font-size: 13px; opacity: 0.7; margin: 0;}
+
+  .tq-stage { flex: 1; padding: 0 16px; position: relative; max-height: 460px;}
+  .tq-card { position: absolute; inset: 0; background: #fff; color: #000; border-radius: 20px;
+    overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    display: flex; flex-direction: column;}
+  .tq-card.gone-left { transform: translateX(-150%) rotate(-15deg); opacity: 0;}
+  .tq-card.gone-right { transform: translateX(150%) rotate(15deg); opacity: 0;}
+  .tq-img { flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 140px; background: linear-gradient(180deg, #fff 0%, #f5f5f7 100%);
+    position: relative;}
+  .tq-quick-info { position: absolute; top: 16px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start;}
+  .tq-time-pill { background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; font-weight: 600;
+    padding: 5px 10px; border-radius: 100px;}
+  .tq-cb-pill { background: #c9f255; color: #000; font-size: 11px; font-weight: 700;
+    padding: 5px 10px; border-radius: 100px;}
+  .tq-info { padding: 16px 18px 18px; background: #fff;}
+  .tq-tag { font-size: 10px; color: #fc2c79; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;}
+  .tq-name { font-size: 22px; font-weight: 700; margin: 4px 0 6px; color: #000; line-height: 1.1;}
+  .tq-meta { font-size: 12px; color: #8e8e93;}
+  .tq-meta strong { color: #000;}
+  .tq-ingredients { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;}
+  .tq-ing { background: #f5f5f7; padding: 4px 9px; border-radius: 100px; font-size: 11px; color: #000;}
+
+  .tq-actions { display: flex; justify-content: center; gap: 24px; padding: 18px 0 12px;}
+  .tq-btn { width: 60px; height: 60px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 28px; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: transform 0.15s;}
+  .tq-btn:active { transform: scale(0.9);}
+  .tq-btn.skip { background: #fff; color: #FF3B30;}
+  .tq-btn.like { background: #fff; color: #34C759;}
+  .tq-btn.add { background: #c9f255; color: #000; padding: 0 24px; width: auto;
+    border-radius: 30px; font-size: 16px; font-weight: 700;}
+
+  .bg-tabs { display: flex; background: #e8e8ed; border-radius: 12px; padding: 3px;
+    margin: 12px 16px 0;}
+  .bg-tab { flex: 1; text-align: center; padding: 9px 0; font-size: 13px;
+    font-weight: 600; border-radius: 9px; color: #8e8e93; cursor: pointer; transition: all 0.2s;}
+  .bg-tab.active { background: #fff; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.08);}
+
+  .hero-budget { margin: 16px; background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2e 100%);
+    border-radius: 24px; padding: 20px; color: #fff; position: relative; overflow: hidden;}
+  .hero-budget::before { content: ''; position: absolute; right: -80px; top: -80px;
+    width: 220px; height: 220px; background: radial-gradient(circle, #FFDD2D 0%, transparent 70%);
+    opacity: 0.3;}
+  .hero-label { font-size: 11px; font-weight: 700; color: #FFDD2D; letter-spacing: 1px;}
+  .hero-month { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px;}
+  .hero-spent { font-size: 36px; font-weight: 700; margin-top: 8px; line-height: 1;}
+  .hero-spent .small { font-size: 18px; color: rgba(255,255,255,0.5); font-weight: 400;}
+  .hero-progress { background: rgba(255,255,255,0.15); border-radius: 8px;
+    height: 12px; margin-top: 14px; position: relative; overflow: hidden;}
+  .hero-progress-fill { background: linear-gradient(90deg, #c9f255 0%, #FFDD2D 100%);
+    height: 100%; width: 79%; border-radius: 8px;}
+  .hero-row { display: flex; justify-content: space-between; margin-top: 10px;
+    font-size: 12px; color: rgba(255,255,255,0.7);}
+  .hero-savings { background: rgba(201,242,85,0.15); border-radius: 14px; padding: 12px;
+    margin-top: 14px; display: flex; gap: 12px; align-items: center;}
+  .hero-savings .ico { font-size: 26px;}
+  .hero-savings .info-h { flex: 1; font-size: 12px; color: rgba(255,255,255,0.85);}
+  .hero-savings .info-h strong { color: #c9f255; font-size: 15px; font-weight: 700;}
+
+  .breakdown-h { font-size: 11px; font-weight: 700; color: #8e8e93;
+    text-transform: uppercase; letter-spacing: 0.8px; margin: 18px 16px 10px;}
+  .cat-row { background: #fff; border-radius: 16px; padding: 14px;
+    margin: 0 16px 8px; display: flex; gap: 12px; align-items: center;}
+  .cat-row .icon { width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;}
+  .cat-row .body { flex: 1;}
+  .cat-row .top-line { display: flex; justify-content: space-between; align-items: center;}
+  .cat-row .name { font-size: 14px; font-weight: 600;}
+  .cat-row .amount { font-size: 14px; font-weight: 700;}
+  .cat-row .bar { background: #f0f0f3; border-radius: 6px; height: 6px;
+    margin-top: 6px; overflow: hidden;}
+  .cat-row .bar-fill { height: 100%; border-radius: 6px;}
+  .cat-row .meta { font-size: 11px; color: #8e8e93; margin-top: 4px;
+    display: flex; justify-content: space-between;}
+  .cat-row.alert .amount { color: #FF6B6B;}
+  .cat-row.alert .bar-fill { background: #FF6B6B;}
+  .cat-row.good .bar-fill { background: #34c759;}
+  .cat-row.normal .bar-fill { background: #FFDD2D;}
+
+  .insight-card { margin: 14px 16px 0; background: linear-gradient(135deg, #ABE73D 0%, #c9f255 100%);
+    border-radius: 18px; padding: 14px;
+    display: flex; gap: 12px; align-items: center; color: #000; cursor: pointer;
+    transition: transform 0.15s;}
+  .insight-card:active { transform: scale(0.98); }
+  .insight-card .icon { font-size: 26px;}
+  .insight-card .info-i { flex: 1;}
+  .insight-card .info-i .title { font-size: 14px; font-weight: 700;}
+  .insight-card .info-i .text { font-size: 12px; opacity: 0.7; margin-top: 2px;}
+  .insight-card .arrow { font-size: 20px;}
+
+  .goal-card { margin: 12px 16px 0; background: #fff; border-radius: 18px; padding: 14px;
+    display: flex; gap: 12px; align-items: center; border-left: 4px solid #007AFF;}
+  .goal-card .ico { font-size: 28px;}
+  .goal-card .body { flex: 1;}
+  .goal-card .ttl { font-size: 14px; font-weight: 700;}
+  .goal-card .sub { font-size: 12px; color: #8e8e93; margin-top: 2px;}
+  .goal-card .progress { width: 100%; height: 5px; background: #f0f0f3; border-radius: 3px;
+    margin-top: 6px; overflow: hidden;}
+  .goal-card .progress-fill { background: #007AFF; height: 100%; width: 62%; border-radius: 3px;}
+  .goal-card .pct { font-size: 12px; font-weight: 700; color: #007AFF;}
+
+  .cart-screen .header { background: #fff; }
+  .cart-items { padding: 0 16px; margin-top: 8px;}
+  .cart-item { background: #fff; border-radius: 14px; padding: 12px;
+    margin-bottom: 8px; display: flex; gap: 12px; align-items: center;}
+  .cart-item .pic { width: 60px; height: 60px; background: #f5f5f7; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;}
+  .cart-item .body { flex: 1;}
+  .cart-item .name { font-size: 13px; font-weight: 500;}
+  .cart-item .meta { font-size: 11px; color: #8e8e93; margin-top: 2px;}
+  .cart-item .price { font-size: 15px; font-weight: 700; margin-top: 4px;}
+  .cart-item .qty { display: flex; align-items: center; gap: 8px; background: #f5f5f7;
+    border-radius: 100px; padding: 6px 4px;}
+  .qty-btn { width: 24px; height: 24px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;}
+  .qty-num { font-size: 14px; font-weight: 600; min-width: 16px; text-align: center;}
+
+  .cart-summary { margin: 16px; background: #fff; border-radius: 18px; padding: 16px;}
+  .cs-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #000;}
+  .cs-row.total { font-weight: 700; font-size: 17px; padding-top: 12px; border-top: 1px solid #f0f0f3; margin-top: 6px;}
+  .cs-savings { color: #34c759; font-weight: 600;}
+
+  .cart-checkout { position: absolute; bottom: 100px; left: 12px; right: 12px;
+    background: #007AFF; border-radius: 16px; padding: 14px;
+    display: flex; justify-content: space-between; align-items: center; color: #fff;
+    cursor: pointer;}
+
+  .annotation { position: absolute; right: -340px; top: 50px; width: 320px;
+    color: #fff; font-size: 13px; line-height: 1.5;}
+  .annotation h3 { font-size: 16px; color: #FFDD2D; margin: 0 0 8px; font-weight: 700;}
+  .annotation .arrow { font-size: 28px; color: #FFDD2D; margin-bottom: 4px; display: block;}
+  .annotation .point { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start;}
+  .annotation .dot { color: #FFDD2D;}
+  @media (max-width: 1100px) { .annotation { display: none;}}
+
+  .controls { position: fixed; top: 24px; left: 24px; background: rgba(0,0,0,0.85);
+    color: #fff; border-radius: 16px; padding: 14px; backdrop-filter: blur(10px);
+    z-index: 1000; max-width: 280px; font-size: 12px;}
+  .controls h4 { margin: 0 0 8px; font-size: 13px; color: #FFDD2D;}
+  .controls .ctrl-btn { display: block; width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.1);
+    border: none; border-radius: 8px; color: #fff; cursor: pointer; margin-bottom: 4px;
+    text-align: left; font-size: 12px; font-family: inherit;}
+  .controls .ctrl-btn.current { background: #FFDD2D; color: #000; font-weight: 700;}
+
+  .toast { position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); color: #fff; padding: 10px 16px; border-radius: 100px;
+    font-size: 13px; z-index: 1000; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; backdrop-filter: blur(10px);}
+  .toast.show { opacity: 1;}
+</style>
+</head>
+<body>
+<div class="controls">
+  <h4>📱 NAVIGATE PROTOTYPE</h4>
+  <button class="ctrl-btn" onclick="goTo('home')">1. Главный Т-Города</button>
+  <button class="ctrl-btn" onclick="goTo('onb1')">2. Онбординг (приветствие)</button>
+  <button class="ctrl-btn" onclick="goTo('onb2')">3. Тиндер сборки Полки</button>
+  <button class="ctrl-btn" onclick="goTo('onb3')">4. Полка собрана</button>
+  <button class="ctrl-btn current" onclick="goTo('polka')">5. ⭐ Главная Полки</button>
+  <button class="ctrl-btn" onclick="goTo('tinder')">6. ⭐ Тиндер «Что съесть?»</button>
+  <button class="ctrl-btn" onclick="goTo('budget')">7. Бюджет/Аналитика</button>
+  <button class="ctrl-btn" onclick="goTo('cart')">8. Корзина</button>
+  <hr style="border-color: rgba(255,255,255,0.2); margin: 10px 0;">
+  <div style="font-size: 11px; opacity: 0.6;">Кликай по кнопкам в макете — все интерактивно</div>
+</div>
+
+<div class="stage">
+<div class="phone">
+  <div class="notch"></div>
+  <div id="toast" class="toast"></div>
+  <div class="screens">
+
+    <div class="screen" id="screen-home"><div class="status-bar"><span class="status-time">6:41</span><span class="status-icons">📶 🔋</span></div><div class="scrollable"><div class="search-row"><div class="search-pill" onclick="showToast('Поиск по всему Т-Городу')">🔍 Поиск</div><div class="orders-pill" onclick="showToast('История заказов')">📋 Orders</div></div><div class="top-grid"><div class="travel-card" onclick="showToast('Путешествия')"><div class="title">Путешествия</div><div class="label-cb">⚪ до 10%</div><div class="img">🧳</div></div><div class="right-col"><div class="small-card" onclick="showToast('Топливо')"><div class="title">Топливо</div><div class="label-cb">⚪ 1%</div><div class="emoji">⛽</div></div><div class="small-card green-grocery" onclick="goTo('polka')" style="background:#fff8d6;"><div class="title" style="font-size:14px;">🆕 Моя Полка</div><div class="label-cb" style="background:#000;color:#FFDD2D;">78 продуктов</div><div class="emoji" style="font-size:42px;">🛒</div></div></div></div><div class="polka-hero" onclick="goTo('polka')"><div class="label">МОЯ ПОЛКА · ОБНОВЛЕНО ВЧЕРА</div><div class="title">Супермаркеты</div><div class="subtitle">78 продуктов под тебя · ВкусВилл, Перекрёсток, Магнит</div><div class="polka-preview"><div class="polka-mini"><div class="pic">🥛</div><div class="price">72 ₽</div></div><div class="polka-mini"><div class="pic">☕</div><div class="price">295 ₽</div></div><div class="polka-mini"><div class="pic">🥐</div><div class="price">89 ₽</div></div><div class="polka-mini"><div class="pic">🐟</div><div class="price">480 ₽</div></div><div class="polka-mini"><div class="pic">🥑</div><div class="price">128 ₽</div></div><div class="polka-mini"><div class="pic">🍓</div><div class="price">240 ₽</div></div><div class="polka-mini"><div class="pic">🧀</div><div class="price">316 ₽</div></div></div><div class="polka-cta"><span>Открыть мою Полку</span><span>→</span></div></div><div class="categories-grid"><div class="cat-item" onclick="showToast('Шопинг')"><div class="cat-icon" style="background:#f3e8ff;">🛍️</div><div class="cat-name">Шопинг</div></div><div class="cat-item" onclick="showToast('Афиша')"><div class="cat-icon" style="background:#ffe4e1;">🎭</div><div class="cat-name">Афиша</div></div><div class="cat-item" onclick="showToast('Отели')"><div class="cat-icon" style="background:#e0f2fe;">🏨</div><div class="cat-name">Отели</div></div><div class="cat-item" onclick="showToast('Авто')"><div class="cat-icon" style="background:#f3f4f6;">🚗</div><div class="cat-name">Купить авто</div></div></div><div class="featured-row"><div class="featured-card" onclick="showToast('Подарок')"><div class="pic">👟</div><div class="info"><div class="ttl">Обувь</div><div class="price"><strong>2 799 ₽</strong> <s>3 999 ₽</s></div></div><div class="close">×</div></div></div></div><div class="tabbar"><div class="tab"><span class="tab-ico">🏠</span><span>Main</span></div><div class="tab"><span class="tab-ico">💳</span><span>Payments</span></div><div class="tab active"><span class="tab-ico">◆</span><span>City</span></div><div class="tab"><span class="tab-ico">💬</span><span>Chat</span></div><div class="tab"><span class="tab-ico">⊞</span><span>Hub</span></div></div></div>
+
+    <div class="screen onb-screen onb-step1" id="screen-onb1"><div class="status-bar"><span class="status-time">6:41</span><span class="status-icons">📶 🔋</span></div><div class="icon-big">🛒✨</div><h1>Соберём твою Полку?</h1><p>Не каталог из 30 000 товаров.<br>Только 80 продуктов — твоих.</p><div class="onb-features"><div class="onb-feat"><div class="num">1</div><div class="txt">Свайпай 7 продуктов — нравится / нет</div></div><div class="onb-feat"><div class="num">2</div><div class="txt">Банк дополнит из твоей истории покупок</div></div><div class="onb-feat"><div class="num">3</div><div class="txt">Готово — твоя личная Полка</div></div></div><div class="onb-cta" onclick="startOnboarding()">Начать · 90 секунд →</div><div class="onb-skip" onclick="goTo('polka')">Пропустить</div></div>
+
+    <div class="screen onb-screen" id="screen-onb2" style="background: linear-gradient(180deg, #FFDD2D 0%, #FFE65A 100%); padding: 60px 0 24px;"><div class="status-bar"><span class="status-time">6:41</span><span class="status-icons">📶 🔋</span></div><div class="swipe-stage"><h2>Что нравится?</h2><div class="progress-pill" id="onbDots"><div class="pp-dot active"></div><div class="pp-dot"></div><div class="pp-dot"></div><div class="pp-dot"></div><div class="pp-dot"></div><div class="pp-dot"></div><div class="pp-dot"></div></div><div class="swipe-deck" id="onbDeck"></div><div class="swipe-actions"><div class="swipe-btn no" onclick="onbSwipe('left')">✕</div><div class="swipe-btn yes" onclick="onbSwipe('right')">♥</div></div></div></div>
+
+    <div class="screen onb-screen onb-done" id="screen-onb3"><div class="status-bar"><span class="status-time">6:42</span><span class="status-icons">📶 🔋</span></div><div class="check-circle">✓</div><h1>Готово, Анна!</h1><p>Твоя Полка собрана</p><div class="scoreline"><div style="text-align:center;"><div class="ss-num">78</div><div class="ss-lbl">SKU</div></div><div style="text-align:center;"><div class="ss-num">3</div><div class="ss-lbl">магазина</div></div><div style="text-align:center;"><div class="ss-num">~15К</div><div class="ss-lbl">бюджет/мес</div></div></div><div class="onb-cta" onclick="goTo('polka')">Перейти на Полку →</div></div>
+
+    <div class="screen" id="screen-polka"><div class="status-bar"><span class="status-time">6:42</span><span class="status-icons">📶 🔋</span></div><div class="header white"><div class="header-row"><div class="h-back" onclick="goTo('home')">‹ Назад</div><div class="h-center"><div class="h-loc">Москва</div><div class="h-addr">Молодогвардейская, 2 ⌄</div></div><div class="h-icon" onclick="showToast('Заказы')">🧾</div></div><div class="polka-greeting"><div class="polka-hello">Привет, Анна 👋</div><div class="polka-sub">78 продуктов · 4 заканчиваются · 12 новинок</div></div></div><div class="scrollable"><div class="mode-pills"><div class="mode-pill active" data-mode="all"><span class="ico">🏠</span> Будни</div><div class="mode-pill" data-mode="weekend"><span class="ico">🎉</span> Выходные</div><div class="mode-pill" data-mode="guests"><span class="ico">👥</span> Гости</div><div class="mode-pill" data-mode="diet"><span class="ico">🥗</span> Диета</div><div class="mode-pill" data-mode="trip"><span class="ico">🧳</span> Поездка</div><div class="mode-pill" data-mode="pet"><span class="ico">🐈</span> Питомец</div></div><div class="budget-bar" onclick="goTo('budget')"><div><div class="budget-label">МАЙ · БЮДЖЕТ</div><div class="budget-value">14 200 / 18 000 ₽</div></div><div class="budget-progress"><div class="budget-pct">79%</div><div class="bp-bg"><div class="bp-fill"></div></div></div></div><div class="hint-card" onclick="showToast('Добавлено 3 позиции')"><div class="ico">⚡</div><div class="info"><div class="h-title">Заканчиваются по твоим циклам</div><div class="h-text">Молоко (4 дня), кофе (5 дней), корм Whiskas (3 дня)</div></div><div class="arrow">→</div></div><div class="tinder-cta-card" onclick="goTo('tinder')"><div class="icon">💝</div><div class="body"><div class="title">Не знаю, что хочу</div><div class="sub">Запусти быстрый подбор · 30 секунд</div></div><div class="arr">→</div></div><div class="section-h"><h2>Моя Полка</h2><div class="all" onclick="showToast('Все 78 продуктов')">All</div></div><div class="polka-grid" id="polkaGrid"></div></div><div class="cart-bar" id="cartBar" onclick="goTo('cart')"><div class="left"><div class="ico">🛒</div><div class="info-text"><strong id="cartSummary">0 позиций · 0 ₽</strong><br>Доставка завтра 11:00-12:00</div></div><div class="next">→</div></div><div class="tabbar"><div class="tab" onclick="goTo('home')"><span class="tab-ico">🏠</span><span>Main</span></div><div class="tab"><span class="tab-ico">💳</span><span>Payments</span></div><div class="tab active"><span class="tab-ico">◆</span><span>City</span></div><div class="tab"><span class="tab-ico">💬</span><span>Chat</span></div><div class="tab"><span class="tab-ico">⊞</span><span>Hub</span></div></div></div>
+
+    <div class="screen tinder-quick" id="screen-tinder"><div class="status-bar" style="background: #1a1a2e;"><span class="status-time" style="color: #fff;">6:43</span><span class="status-icons" style="color: #fff;">📶 🔋</span></div><div class="header" style="background: #1a1a2e;"><div class="header-row"><div class="h-back" onclick="goTo('polka')">‹ Полка</div><div class="h-center"><div class="h-loc">Быстрый подбор</div><div class="h-addr">Свайпай — собираем под ситуацию</div></div><div class="h-icon" style="color:#fff;" onclick="showToast('Настройки')">⚙</div></div></div><div class="tq-context"><div class="tq-context-pills"><div class="tq-cp active">🍽 Хочу есть сейчас</div><div class="tq-cp">🌅 Завтрак</div><div class="tq-cp">🌙 Поздний ужин</div><div class="tq-cp">🎬 Под фильм</div><div class="tq-cp">👥 Гости через 2 ч</div><div class="tq-cp">💪 ЗОЖ</div></div></div><div class="tq-prompt"><h2>Что съесть прямо сейчас?</h2><p>Под твою историю · 6 вариантов · 30 секунд</p></div><div class="tq-stage" id="tinderStage"></div><div class="tq-actions"><div class="tq-btn skip" onclick="tinderSwipe('left')">✕</div><div class="tq-btn add" onclick="tinderAdd()">+ В корзину</div><div class="tq-btn like" onclick="tinderSwipe('right')">♥</div></div></div>
+
+    <div class="screen" id="screen-budget"><div class="status-bar"><span class="status-time">6:44</span><span class="status-icons">📶 🔋</span></div><div class="header white"><div class="header-row"><div class="h-back" onclick="goTo('polka')">‹ Полка</div><div class="h-center"><div class="h-loc">Моя Полка</div><div class="h-addr">Бюджет и аналитика</div></div><div class="h-icon" onclick="showToast('Настройки')">⚙</div></div><div class="bg-tabs"><div class="bg-tab" onclick="goTo('polka')">Полка</div><div class="bg-tab active">Бюджет</div><div class="bg-tab" onclick="showToast('Прогноз')">Прогноз</div></div></div><div class="scrollable"><div class="hero-budget"><div class="hero-label">МАЙ · ПРОДУКТОВЫЙ БЮДЖЕТ</div><div class="hero-month">Осталось 7 дней</div><div class="hero-spent">14 200 ₽ <span class="small">/ 18 000 ₽</span></div><div class="hero-progress"><div class="hero-progress-fill"></div></div><div class="hero-row"><span>Потрачено 79%</span><span>У похожих: 19 800 ₽</span></div><div class="hero-savings"><div class="ico">💰</div><div class="info-h"><strong>Сэкономлено 2 340 ₽</strong><br>Полка предложила тебе аналоги дешевле</div></div></div></div><div class="tabbar"><div class="tab" onclick="goTo('home')"><span class="tab-ico">🏠</span><span>Main</span></div><div class="tab"><span class="tab-ico">💳</span><span>Payments</span></div><div class="tab active"><span class="tab-ico">◆</span><span>City</span></div><div class="tab"><span class="tab-ico">💬</span><span>Chat</span></div><div class="tab"><span class="tab-ico">⊞</span><span>Hub</span></div></div></div>
+
+    <div class="screen cart-screen" id="screen-cart"><div class="status-bar"><span class="status-time">6:46</span><span class="status-icons">📶 🔋</span></div><div class="header white"><div class="header-row"><div class="h-back" onclick="goTo('polka')">‹ Полка</div><div class="h-center"><div class="h-loc">Корзина</div><div class="h-addr">Доставка завтра 11:00-12:00</div></div><div class="h-icon" onclick="showToast('Очистить')">🗑</div></div></div><div class="scrollable" id="cartList"><div class="cart-items"></div></div><div class="cart-checkout" onclick="checkout()"><div class="left"><strong id="cartTotal">0 ₽</strong><small>0 позиций</small></div><span>К оплате →</span></div><div class="tabbar"><div class="tab" onclick="goTo('home')"><span class="tab-ico">🏠</span><span>Main</span></div><div class="tab"><span class="tab-ico">💳</span><span>Payments</span></div><div class="tab active"><span class="tab-ico">◆</span><span>City</span></div><div class="tab"><span class="tab-ico">💬</span><span>Chat</span></div><div class="tab"><span class="tab-ico">⊞</span><span>Hub</span></div></div></div>
+
+  </div>
+</div>
+<div class="annotation"><span class="arrow">←</span><h3>ОТЛИЧИЕ ОТ "УМНОЙ КОРЗИНЫ"</h3><div class="point"><span class="dot">•</span> <b>Корзина пуста</b> по умолчанию — не «AI собрал за тебя»</div><div class="point"><span class="dot">•</span> <b>Полка = пространство</b>, не automated basket</div><div class="point"><span class="dot">•</span> <b>Режимы Полки</b> (Будни/Выходной/Гости/Диета/Поездка/Питомец)</div><div class="point"><span class="dot">•</span> <b>Тиндер интегрирован</b> для ситуаций «не знаю что хочу»</div><div class="point"><span class="dot">•</span> <b>Identity-нарратив</b> «Моя Полка» — не «AI рекомендация»</div></div>
+</div>
+<script>
+  let cart = [];
+  let onbStep = 1;
+  let tinderStep = 0;
+
+  const onbProducts = [
+    {emoji:'🥑', cat:'Свежие овощи', name:'Авокадо Hass', meta:'128 ₽ · ВкусВилл'},
+    {emoji:'🍝', cat:'Готовые блюда', name:'Паста карбонара', meta:'460 ₽ · набор на 2 порции'},
+    {emoji:'🥗', cat:'ЗОЖ-еда', name:'Боул с лососем', meta:'520 ₽ · 580 ккал'},
+    {emoji:'🍕', cat:'Готовая еда', name:'Пицца Маргарита', meta:'380 ₽ · ВкусВилл'},
+    {emoji:'🍣', cat:'Японская кухня', name:'Сет роллов 24 шт', meta:'890 ₽ · ВкусВилл'},
+    {emoji:'🥐', cat:'Завтрак', name:'Круассан с лососем', meta:'180 ₽ · ВкусВилл'},
+    {emoji:'☕', cat:'Напитки', name:'Кофе раф латте', meta:'240 ₽ · готовый'}
+  ];
+
+  const polkaItems = [
+    {emoji:'🥛',source:'ВкусВилл',price:72,name:'Молоко Брест 3.2% 1л',freq:'Берёшь 4×/нед'},
+    {emoji:'☕',source:'Перекрёсток',price:295,old:340,name:'Кофе Jardin Aroma зерно 250г',freq:'1×/2 нед'},
+    {emoji:'🥐',source:'ВкусВилл',price:89,name:'Круассан с маслом 80г',freq:'Берёшь 3×/нед'},
+    {emoji:'🐟',source:'Магнит',price:480,name:'Сёмга охлаждённая 300г',freq:'Дешевле в Перекрёстке: 460₽',freqClass:'alert'},
+    {emoji:'🥑',source:'ВкусВилл',price:128,name:'Авокадо Hass',freq:'Берёшь 2×/нед',like:true},
+    {emoji:'🐈',source:'Перекрёсток',price:580,name:'Whiskas мясо 1.9кг',freq:'1×/3 нед'},
+    {emoji:'🍓',source:'ВкусВилл',price:240,name:'Клубника свежая 250г',freq:'🆕 Новинка для тебя',freqClass:'discover'},
+    {emoji:'🧀',source:'ВкусВилл',price:316,old:355,name:'Сыр «Халумис» для жарки 200г',freq:'Берёшь 1×/нед'}
+  ];
+
+  const tinderItems = [
+    {emoji:'🍝', tag:'★ Под твой профиль', name:'Паста карбонара', price:460, meta:'ингредиенты на 2 порции', ing:['Спагетти 500г','Бекон','Сливки','Пармезан','+2'], time:'22 мин · 1.5 ч', cb:'−14%'},
+    {emoji:'🍣', tag:'🆕 Не пробовала', name:'Сет «Филадельфия»', price:890, meta:'уже готовый, 24 шт', ing:['Лосось','Сыр','Огурец','Рис','Нори'], time:'5 мин · 90 мин', cb:'−10%'},
+    {emoji:'🥗', tag:'🥗 ЗОЖ-вариант', name:'Боул с тунцом', price:520, meta:'380 ккал · готовый', ing:['Тунец','Авокадо','Киноа','Огурец','+3'], time:'5 мин · 90 мин', cb:'—'}
+  ];
+
+  function goTo(screenName) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const map = {home:'screen-home', onb1:'screen-onb1', onb2:'screen-onb2', onb3:'screen-onb3', polka:'screen-polka', tinder:'screen-tinder', budget:'screen-budget', cart:'screen-cart'};
+    const targetId = map[screenName];
+    if (targetId) document.getElementById(targetId).classList.add('active');
+    document.querySelectorAll('.controls .ctrl-btn').forEach(b => b.classList.remove('current'));
+    const idx = ['home','onb1','onb2','onb3','polka','tinder','budget','cart'].indexOf(screenName);
+    if (idx >= 0) document.querySelectorAll('.controls .ctrl-btn')[idx].classList.add('current');
+    if (screenName === 'tinder') resetTinder();
+    if (screenName === 'cart') renderCart();
+  }
+
+  function renderPolka() {
+    const el = document.getElementById('polkaGrid');
+    el.innerHTML = polkaItems.map((p, i) => `<div class="product" onclick="addToCart(${i})"><div class="pic">${p.emoji}<div class="source-tag">${p.source}</div>${p.like?'<div class="like-tag">♥</div>':''}</div><div class="price-row"><span class="price">${p.price} ₽</span>${p.old?`<span class="old-price">${p.old} ₽</span>`:''}</div><div class="name">${p.name}</div><div class="freq-tag ${p.freqClass||''}">${p.freq}</div><div class="add-btn">+</div></div>`).join('');
+  }
+
+  function startOnboarding() {
+    onbStep = 1;
+    renderOnboardingCard();
+    updateOnboardingDots();
+    goTo('onb2');
+  }
+
+  function renderOnboardingCard() {
+    const d = document.getElementById('onbDeck');
+    const product = onbProducts[onbStep - 1];
+    d.innerHTML = product ? `<div class="swipe-card"><div class="sc-img">${product.emoji}</div><div class="sc-info"><div class="sc-cat">${product.cat}</div><div class="sc-name">${product.name}</div><div class="sc-meta">${product.meta}</div></div></div>` : '';
+  }
+
+  function updateOnboardingDots() {
+    document.querySelectorAll('#onbDots .pp-dot').forEach((dot, index) => {
+      dot.classList.remove('done','active');
+      if (index < onbStep - 1) dot.classList.add('done');
+      if (index === onbStep - 1) dot.classList.add('active');
+    });
+  }
+
+  function onbSwipe(dir) {
+    const card = document.querySelector('#onbDeck .swipe-card');
+    if (!card) return;
+    card.classList.add(dir === 'left' ? 'gone-left' : 'gone-right');
+    setTimeout(() => {
+      onbStep += 1;
+      if (onbStep > onbProducts.length) {
+        goTo('onb3');
+        return;
+      }
+      renderOnboardingCard();
+      updateOnboardingDots();
+    }, 300);
+  }
+
+  function resetTinder() { tinderStep = 0; renderTinderCard(); }
+
+  function renderTinderCard() {
+    const stage = document.getElementById('tinderStage');
+    if (tinderStep >= tinderItems.length) {
+      stage.innerHTML = `<div style="background:#fff;color:#000;border-radius:20px;padding:40px 20px;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:center;"><div style="font-size:60px;">🎉</div><h2 style="margin:16px 0 8px;font-size:24px;">Готово!</h2><p style="color:#8e8e93;margin:0 0 20px;">Все варианты пройдены</p><div style="background:#c9f255;color:#000;padding:14px;border-radius:14px;font-weight:700;cursor:pointer;" onclick="goTo('cart')">К корзине →</div></div>`;
+      return;
+    }
+    const i = tinderItems[tinderStep];
+    stage.innerHTML = `<div class="tq-card"><div class="tq-img">${i.emoji}<div class="tq-quick-info"><div class="tq-time-pill">⏱ ${i.time}</div>${i.cb !== '—' ? `<div class="tq-cb-pill">${i.cb}</div>` : ''}</div></div><div class="tq-info"><div class="tq-tag">${i.tag}</div><div class="tq-name">${i.name}</div><div class="tq-meta"><strong>${i.price} ₽</strong> · ${i.meta}</div><div class="tq-ingredients">${i.ing.map(x => `<span class="tq-ing">${x}</span>`).join('')}</div></div></div>`;
+  }
+
+  function tinderSwipe(dir) {
+    const card = document.querySelector('#tinderStage .tq-card');
+    if (!card) return;
+    card.classList.add(dir === 'left' ? 'gone-left' : 'gone-right');
+    setTimeout(() => { tinderStep += 1; renderTinderCard(); }, 300);
+  }
+
+  function tinderAdd() {
+    const item = tinderItems[tinderStep];
+    if (!item) return;
+    cart.push({name: item.name, price: item.price, emoji: item.emoji});
+    updateCartBar();
+    showToast(`+ «${item.name}» в корзину`);
+    setTimeout(() => tinderSwipe('right'), 150);
+  }
+
+  function addToCart(index) {
+    const p = polkaItems[index];
+    cart.push({name:p.name, price:p.price, emoji:p.emoji});
+    updateCartBar();
+    showToast(`+ ${p.name}`);
+  }
+
+  function updateCartBar() {
+    const bar = document.getElementById('cartBar');
+    const count = cart.length;
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    if (count > 0) {
+      bar.classList.add('visible');
+      document.getElementById('cartSummary').textContent = `${count} ${declension(count)} · ${total} ₽`;
+    } else bar.classList.remove('visible');
+  }
+
+  function declension(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'позиция';
+    if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'позиции';
+    return 'позиций';
+  }
+
+  function renderCart() {
+    const list = document.querySelector('#cartList .cart-items');
+    if (!cart.length) {
+      list.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#8e8e93;"><div style="font-size:60px;">🛒</div><h3 style="font-size:20px;color:#000;margin:16px 0 8px;">Корзина пуста</h3><div onclick="goTo('polka')" style="background:#007AFF;color:#fff;padding:14px 24px;border-radius:14px;display:inline-block;font-weight:600;cursor:pointer;">Открыть Полку →</div></div>`;
+      document.getElementById('cartTotal').textContent = '0 ₽';
+      return;
+    }
+    list.innerHTML = cart.map((item, i) => `<div class="cart-item"><div class="pic">${item.emoji}</div><div class="body"><div class="name">${item.name}</div><div class="meta">Партнёрский магазин</div><div class="price">${item.price} ₽</div></div><div class="qty"><div class="qty-btn" onclick="changeQty(${i}, -1)">−</div><div class="qty-num">1</div></div></div>`).join('');
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    document.getElementById('cartTotal').textContent = `${total} ₽`;
+    document.querySelector('.cart-checkout small').textContent = `${cart.length} ${declension(cart.length)}`;
+  }
+
+  function changeQty(i) { cart.splice(i,1); renderCart(); updateCartBar(); }
+
+  function checkout() {
+    if (!cart.length) return;
+    showToast('Заказ оформлен! Доставка завтра 11:00');
+    setTimeout(() => { cart = []; updateCartBar(); goTo('polka'); }, 1200);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 1700);
+  }
+
+  document.querySelectorAll('.mode-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+      pill.classList.add('active');
+      showToast(`Режим: ${pill.textContent.trim()}`);
+    });
+  });
+
+  document.querySelectorAll('.tq-cp').forEach(p => p.addEventListener('click', () => {
+    document.querySelectorAll('.tq-cp').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    showToast(`Контекст: ${p.textContent.trim()}`);
+  }));
+
+  renderPolka();
+  renderOnboardingCard();
+  updateOnboardingDots();
+  goTo('polka');
+</script>
+</body>
+</html>
